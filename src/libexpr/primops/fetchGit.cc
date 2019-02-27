@@ -166,14 +166,11 @@ GitInfo exportGit(ref<Store> store, const std::string & uri,
         if (e.errNo != ENOENT) throw;
     }
 
-    // FIXME: should pipe this, or find some better way to extract a
-    // revision.
-    auto tar = runProgram("git", true, { "-C", cacheDir, "archive", gitInfo.rev });
-
     Path tmpDir = createTempDir();
     AutoDelete delTmpDir(tmpDir, true);
 
-    runProgram("tar", true, { "x", "-C", tmpDir }, tar);
+    auto bashCmds = std::string("git -C ") + cacheDir + " archive " + gitInfo.rev + " | tar x -C " + tmpDir;
+    runProgram("bash", true, {}, bashCmds);
 
     gitInfo.storePath = store->addToStore(name, tmpDir);
 
