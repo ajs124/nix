@@ -253,16 +253,13 @@ GitInfo exportGit(ref<Store> store, std::string uri,
     gitInfo.ref = *ref;
     gitInfo.rev = *rev;
 
-    printTalkative("using revision %s of repo '%s'", gitInfo.rev, uri);
-
-    // FIXME: should pipe this, or find some better way to extract a
-    // revision.
-    auto tar = runProgram("git", true, { "-C", repoDir, "archive", gitInfo.rev.gitRev() });
+    printTalkative("using revision %s of repo '%s'", gitInfo.rev.gitRev(), uri);
 
     Path tmpDir = createTempDir();
     AutoDelete delTmpDir(tmpDir, true);
 
-    runProgram("tar", true, { "x", "-C", tmpDir }, tar);
+    auto bashCmds = std::string("git -C ") + cacheDir + " archive " + gitInfo.rev.gitRev() + " | tar x -C " + tmpDir;
+    runProgram("bash", true, {}, bashCmds);
 
     gitInfo.storePath = store->addToStore(name, tmpDir);
 
